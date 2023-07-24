@@ -2,5 +2,10 @@ from django.contrib import admin
 
 from .models import User, Follow
 
+
+class FollowAdmin(admin.ModelAdmin):
+    search_fields = ['follower__username', 'following__username']
+
+
 admin.site.register(User)
-admin.site.register(Follow)
+admin.site.register(Follow, FollowAdmin)

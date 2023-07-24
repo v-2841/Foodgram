@@ -5,7 +5,20 @@ from .models import (
     UserFavoritedRecipe, UserShoppingCart,
 )
 
-admin.site.register(Recipe)
+
+class IngredientInline(admin.TabularInline):
+    model = Ingredient
+
+
+class TagRecipeInline(admin.TabularInline):
+    model = TagRecipe
+
+
+class RecipeAdmin(admin.ModelAdmin):
+    inlines = [IngredientInline, TagRecipeInline]
+
+
+admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Tag)
 admin.site.register(TagRecipe)
 admin.site.register(Ingredient)

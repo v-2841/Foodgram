@@ -5,12 +5,19 @@ from users.models import User
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=32)
-    color = models.CharField(max_length=16)
+    name = models.CharField(
+        max_length=32,
+        verbose_name='Название',
+    )
+    color = models.CharField(
+        max_length=16,
+        verbose_name='Цвет',
+    )
     slug = models.SlugField(
         max_length=32,
         unique=True,
         db_index=True,
+        verbose_name='Слаг',
     )
 
     class Meta:
@@ -23,8 +30,14 @@ class Tag(models.Model):
 
 
 class IngredientSpecification(models.Model):
-    name = models.CharField(max_length=64)
-    measurement_unit = models.CharField(max_length=16)
+    name = models.CharField(
+        max_length=64,
+        verbose_name='Название',
+    )
+    measurement_unit = models.CharField(
+        max_length=16,
+        verbose_name='Размерность',
+    )
 
     class Meta:
         ordering = ('id',)
@@ -33,31 +46,6 @@ class IngredientSpecification(models.Model):
 
     def __str__(self):
         return self.name + ', ' + self.measurement_unit
-
-
-class Ingredient(models.Model):
-    specification = models.ForeignKey(
-        IngredientSpecification,
-        on_delete=models.CASCADE,
-    )
-    amount = models.SmallIntegerField(
-        validators=[
-            MaxValueValidator(10000),
-            MinValueValidator(0),
-        ],
-        error_messages={
-            'validators': 'Введите число от 0 до 10000'
-        },
-    )
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Ингредиент'
-        verbose_name_plural = 'Ингредиенты'
-
-    def __str__(self):
-        return (self.specification.name + ' - ' + str(self.amount)
-                + ' ' + self.specification.measurement_unit)
 
 
 class Recipe(models.Model):
@@ -92,10 +80,9 @@ class Recipe(models.Model):
         default=None,
         verbose_name='Изображение',
     )
-    ingredients = models.ForeignKey(
-        Ingredient,
-        on_delete=models.CASCADE,
-        verbose_name='Ингредиенты',
+    ingredients = models.ManyToManyField(
+        IngredientSpecification,
+        through='Ingredient',
     )
     tags = models.ManyToManyField(
         Tag,
@@ -121,14 +108,48 @@ class Recipe(models.Model):
         return self.name
 
 
+class Ingredient(models.Model):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт',
+    )
+    specification = models.ForeignKey(
+        IngredientSpecification,
+        on_delete=models.CASCADE,
+        verbose_name='Характеристики ингредиента',
+    )
+    amount = models.SmallIntegerField(
+        validators=[
+            MaxValueValidator(10000),
+            MinValueValidator(0),
+        ],
+        error_messages={
+            'validators': 'Введите число от 0 до 10000'
+        },
+        verbose_name='Количество',
+    )
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
+
+    def __str__(self):
+        return (self.specification.name + ' - ' + str(self.amount)
+                + ' ' + self.specification.measurement_unit)
+
+
 class TagRecipe(models.Model):
     tag = models.ForeignKey(
         Tag,
         on_delete=models.CASCADE,
+        verbose_name='Тег',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        verbose_name='Рецепт',
     )
 
     class Meta:
@@ -148,10 +169,12 @@ class UserFavoritedRecipe(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        verbose_name='Рецепт',
     )
 
     class Meta:
@@ -171,10 +194,12 @@ class UserShoppingCart(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        verbose_name='Рецепт',
     )
 
     class Meta:

@@ -19,29 +19,35 @@ class User(AbstractUser):
         validators=(validate_username,),
         max_length=64,
         unique=True,
+        verbose_name='Ник',
     )
     email = models.EmailField(
         max_length=256,
         unique=True,
+        verbose_name='Электронная почта',
     )
     role = models.CharField(
         max_length=16,
         choices=ROLE_CHOICES,
         default=USER,
-        blank=True
+        blank=True,
+        verbose_name='Роль',
     )
     first_name = models.CharField(
         max_length=64,
-        blank=True
+        blank=True,
+        verbose_name='Имя',
     )
     last_name = models.CharField(
         max_length=64,
-        blank=True
+        blank=True,
+        verbose_name='Фамилия',
     )
     confirmation_code = models.CharField(
         max_length=256,
         null=True,
         blank=True,
+        verbose_name='Код подтверждения',
     )
 
     @property
