@@ -8,6 +8,7 @@ class Tag(models.Model):
     name = models.CharField(
         max_length=32,
         verbose_name='Название',
+        db_index=True,
     )
     color = models.CharField(
         max_length=16,
@@ -21,7 +22,7 @@ class Tag(models.Model):
     )
 
     class Meta:
-        ordering = ('id',)
+        ordering = ('-id',)
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
 
@@ -33,6 +34,7 @@ class IngredientSpecification(models.Model):
     name = models.CharField(
         max_length=64,
         verbose_name='Название',
+        db_index=True,
     )
     measurement_unit = models.CharField(
         max_length=16,
@@ -40,7 +42,7 @@ class IngredientSpecification(models.Model):
     )
 
     class Meta:
-        ordering = ('id',)
+        ordering = ('-id',)
         verbose_name = 'Свойства ингредиента'
         verbose_name_plural = 'Свойства ингредиентов'
 
@@ -52,6 +54,7 @@ class Recipe(models.Model):
     name = models.CharField(
         max_length=64,
         verbose_name='Название',
+        db_index=True,
     )
     text = models.TextField(
         max_length=1024,
@@ -99,8 +102,14 @@ class Recipe(models.Model):
         related_name='shopping_cart'
     )
 
+    @property
+    def favorites_counter(self):
+        return self.is_favorited.all().count()
+
+    favorites_counter.fget.short_description = 'В избранных'
+
     class Meta:
-        ordering = ('id',)
+        ordering = ('-id',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -130,8 +139,16 @@ class Ingredient(models.Model):
         verbose_name='Количество',
     )
 
+    # @property
+    # def name(self):
+    #     return self.specification.name
+
+    # @property
+    # def measurement_unit(self):
+    #     return self.specification.measurement_unit
+
     class Meta:
-        ordering = ('id',)
+        ordering = ('-id',)
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
 
@@ -153,7 +170,7 @@ class TagRecipe(models.Model):
     )
 
     class Meta:
-        ordering = ('id',)
+        ordering = ('-id',)
         verbose_name = 'Теги рецепта'
         verbose_name_plural = 'Теги рецептов'
         constraints = [
@@ -178,7 +195,7 @@ class UserFavoritedRecipe(models.Model):
     )
 
     class Meta:
-        ordering = ('id',)
+        ordering = ('-id',)
         verbose_name = 'Любимый рецепт'
         verbose_name_plural = 'Любимые рецепты'
         constraints = [
@@ -203,7 +220,7 @@ class UserShoppingCart(models.Model):
     )
 
     class Meta:
-        ordering = ('id',)
+        ordering = ('-id',)
         verbose_name = 'Рецепт в корзине'
         verbose_name_plural = 'Корзины'
         constraints = [
