@@ -1,27 +1,25 @@
-from rest_framework import permissions, status
+from rest_framework import status
+from rest_framework.generics import CreateAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from users.serializers import ChangePasswordSerializer
 
 
-class UpdatePassword(APIView):
-    permission_classes = (permissions.IsAuthenticated, )
+class ChangePasswordView(CreateAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = (IsAuthenticated,)
 
-    def get_object(self, queryset=None):
-        return self.request.user
-
-    def put(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        serializer = ChangePasswordSerializer(data=request.data)
-
+    def post(self, request):
+        user = self.request.user
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            old_password = serializer.data.get("old_password")
-            if not self.object.check_password(old_password):
-                return Response({"old_password": ["Wrong password."]},
-                                status=status.HTTP_400_BAD_REQUEST)
-            self.object.set_password(serializer.data.get("new_password"))
-            self.object.save()
+            if not user.check_password(
+                    serializer.data.get("old_password")):
+                return Response(
+                    {"old_password": "Неверный пароль."},
+                    status=status.HTTP_400_BAD_REQUEST)
+            user.set_password(serializer.data.get("password"))
+            user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
