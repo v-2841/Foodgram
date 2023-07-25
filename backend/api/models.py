@@ -52,7 +52,7 @@ class IngredientSpecification(models.Model):
 
 class Recipe(models.Model):
     name = models.CharField(
-        max_length=64,
+        max_length=200,
         verbose_name='Название',
         db_index=True,
     )
@@ -70,10 +70,10 @@ class Recipe(models.Model):
         verbose_name='Время приготовления',
         validators=[
             MaxValueValidator(300),
-            MinValueValidator(0),
+            MinValueValidator(1),
         ],
         error_messages={
-            'validators': 'Введите число от 0 до 300'
+            'validators': 'Введите число от 1 до 300'
         },
     )
     image = models.ImageField(

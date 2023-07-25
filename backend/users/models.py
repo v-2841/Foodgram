@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import CheckConstraint, F, Q, UniqueConstraint
 
 from .validators import validate_username
 
@@ -15,12 +16,14 @@ ROLE_CHOICES = [
 class User(AbstractUser):
     username = models.CharField(
         validators=(validate_username,),
-        max_length=64,
+        max_length=150,
+        blank=False,
         unique=True,
         verbose_name='Ник',
     )
     email = models.EmailField(
-        max_length=256,
+        max_length=254,
+        blank=False,
         unique=True,
         verbose_name='Электронная почта',
     )
@@ -28,24 +31,18 @@ class User(AbstractUser):
         max_length=16,
         choices=ROLE_CHOICES,
         default=USER,
-        blank=True,
+        blank=False,
         verbose_name='Роль',
     )
     first_name = models.CharField(
-        max_length=64,
-        blank=True,
+        max_length=150,
+        blank=False,
         verbose_name='Имя',
     )
     last_name = models.CharField(
-        max_length=64,
-        blank=True,
+        max_length=150,
+        blank=False,
         verbose_name='Фамилия',
-    )
-    confirmation_code = models.CharField(
-        max_length=256,
-        null=True,
-        blank=True,
-        verbose_name='Код подтверждения',
     )
 
     @property
@@ -82,8 +79,10 @@ class Follow(models.Model):
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         constraints = [
-            models.UniqueConstraint(
+            UniqueConstraint(
                 fields=['follower', 'following'], name='not_unique_follow'),
+            CheckConstraint(
+                check=~Q(follower=F('following')), name='self_follow'),
         ]
 
     def __str__(self):
