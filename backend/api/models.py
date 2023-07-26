@@ -94,7 +94,7 @@ class Recipe(models.Model):
     is_favorited = models.ManyToManyField(
         User,
         through='UserFavoritedRecipe',
-        related_name='favorited_recipes',
+        related_name='favorite_recipes',
     )
     is_in_shopping_cart = models.ManyToManyField(
         User,
