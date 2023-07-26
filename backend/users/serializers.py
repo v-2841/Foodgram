@@ -5,13 +5,24 @@ from rest_framework.fields import SerializerMethodField
 from users.models import User
 
 
-class ChangePasswordSerializer(serializers.Serializer):
+class ChangePasswordSerializer(serializers.ModelSerializer):
     old_password = serializers.CharField(required=True)
-    password = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('password', 'old_password')
 
     def validate_password(self, value):
         validate_password(value)
         return value
+
+    def update(self, instance, validated_data):
+        if not instance.check_password(validated_data['old_password']):
+            raise serializers.ValidationError(
+                {"old_password": "Неверный пароль."})
+        instance.set_password(validated_data['password'])
+        instance.save()
+        return instance
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -29,12 +40,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+
     class Meta:
         model = User
         fields = (
             'username', 'email', 'first_name',
             'last_name', 'id', 'password')
-        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         user = User.objects.create(

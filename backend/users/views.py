@@ -1,38 +1,31 @@
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from users.models import User
-from users.serializers import ChangePasswordSerializer, CreateUserSerializer, UserSerializer
-
-
-class ChangePasswordView(CreateAPIView):
-    serializer_class = ChangePasswordSerializer
-    permission_classes = (IsAuthenticated,)
-
-    def post(self, request):
-        user = self.request.user
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            if not user.check_password(
-                    serializer.data.get("old_password")):
-                return Response(
-                    {"old_password": "Неверный пароль."},
-                    status=status.HTTP_400_BAD_REQUEST)
-            user.set_password(serializer.data.get("password"))
-            user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+from users.serializers import (ChangePasswordSerializer,
+                               CreateUserSerializer, UserSerializer)
 
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated,)
     http_method_names = ['get', 'post']
+
+    def get_permissions(self):
+        if self.action == 'create':
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
+    def create(self, request):
+        serializer = CreateUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     @action(
         detail=False,
@@ -43,7 +36,14 @@ class UserViewSet(ModelViewSet):
         serializer = UserSerializer(request.user, context={'request': request})
         return Response(serializer.data)
 
-    @action(detail=False, permission_classes=[AllowAny])
-    def post(self, request):
-        serializer = CreateUserSerializer(data=request.data)
-        return Response(serializer.data)
+    @action(
+        detail=False,
+        methods=['post'],
+        permission_classes=(IsAuthenticated,),
+        url_path='set_password',
+    )
+    def change_password(self, request):
+        serializer = ChangePasswordSerializer(request.user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
