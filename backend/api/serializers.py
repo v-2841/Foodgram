@@ -129,7 +129,6 @@ class RecipeAbbreviationSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'image', 'cooking_time']
 
 
-class ShoppingCartSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Recipe
-        fields = ['name']
+class ShoppingCartSerializer(serializers.Serializer):
+    specification = IngredientSpecificationSerializer()
+    amount = serializers.IntegerField()

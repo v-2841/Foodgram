@@ -13,7 +13,7 @@ from api.serializers import (
     RecipeReadSerializer, RecipeWriteSerializer, ShoppingCartSerializer,
     TagSerializer,
     )
-from api.utils import generate_pdf
+from api.utils import generate_pdf, shopping_cart_serializer_to_print_data
 
 
 class IngredientSpecificationViewSet(ModelViewSet):
@@ -90,8 +90,18 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated],
     )
     def download_shopping_cart(self, request):
-        queryset = request.user.shopping_cart
-        serializer = ShoppingCartSerializer(queryset, many=True)
-        data_dict = {'data': serializer.data}
-        pdf_response = generate_pdf(data_dict)
-        return pdf_response
+        grouped_ingredients = {}
+        for recipe in request.user.shopping_cart.all():
+            for ingredient in recipe.ingredients_names.all():
+                key = ingredient.specification.id
+                if key in grouped_ingredients:
+                    grouped_ingredients[key]['amount'] += ingredient.amount
+                else:
+                    grouped_ingredients[key] = {
+                        'specification': ingredient.specification,
+                        'amount': ingredient.amount,
+                    }
+        serializer = ShoppingCartSerializer(
+            list(grouped_ingredients.values()), many=True)
+        return generate_pdf(
+            shopping_cart_serializer_to_print_data(serializer.data))

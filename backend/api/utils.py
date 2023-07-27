@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -11,6 +12,17 @@ from reportlab.lib.pagesizes import A4
 
 class LimitPageNumberPagination(PageNumberPagination):
     page_size_query_param = 'limit'
+
+
+def shopping_cart_serializer_to_print_data(data):
+    result_data = []
+    for ingredient in data:
+        result_data.append(
+            ingredient['specification']['name']
+            + ' - ' + str(ingredient['amount'])
+            + ', ' + ingredient['specification']['measurement_unit'])
+    result_data.sort()
+    return result_data
 
 
 def generate_pdf(data):
@@ -30,15 +42,14 @@ def generate_pdf(data):
     header_font_size = 18
     font_size = 12
     c.setFont("Arial", header_font_size)
-    c.drawString(left_margin, height - top_margin, "Список покупок")
+    c.drawString(left_margin, height - top_margin, 'Список покупок от '
+                 + f'{datetime.today().strftime("%d.%m.%Y")} г.')
     c.setFont("Arial", font_size)
-    data_list = data.get('data', [])
     y_position = height - top_margin - header_font_size - line_spacing
-    for item in data_list:
+    for item in data:
         c.drawString(left_margin, y_position, "\u25A1")
         x_offset = left_margin + 15
-        for key, value in item.items():
-            c.drawString(x_offset, y_position, f"{key}: {value}")
-            y_position -= font_size + line_spacing
+        c.drawString(x_offset, y_position, item)
+        y_position -= font_size + line_spacing
     c.save()
     return response
