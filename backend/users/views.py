@@ -31,9 +31,9 @@ class UserViewSet(ModelViewSet):
         detail=False,
         permission_classes=(IsAuthenticated,),
         url_path='me',
-    )
+        )
     def get_current_user_info(self, request):
-        serializer = UserSerializer(request.user, context={'request': request})
+        serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
     @action(
@@ -41,7 +41,7 @@ class UserViewSet(ModelViewSet):
         methods=['post'],
         permission_classes=(IsAuthenticated,),
         url_path='set_password',
-    )
+        )
     def change_password(self, request):
         serializer = ChangePasswordSerializer(request.user, data=request.data)
         serializer.is_valid(raise_exception=True)

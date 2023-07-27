@@ -35,8 +35,11 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name', 'id', 'is_subscribed')
 
     def is_subscribed_by_user(self, instance):
-        return (self.context['request'].user.follower.filter(
-            following=instance).exists())
+        try:
+            return (self.context['request'].user.follower.filter(
+                following=instance).exists())
+        except Exception:
+            return False
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
