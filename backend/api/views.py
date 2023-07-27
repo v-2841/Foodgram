@@ -90,8 +90,8 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated],
     )
     def download_shopping_cart(self, request):
-        queryset = request.user.is_in_shopping_cart
+        queryset = request.user.shopping_cart
         serializer = ShoppingCartSerializer(queryset, many=True)
-        data = serializer.data
-        pdf_response = generate_pdf(data)
+        data_dict = {'data': serializer.data}
+        pdf_response = generate_pdf(data_dict)
         return pdf_response

@@ -132,4 +132,4 @@ class RecipeAbbreviationSerializer(serializers.ModelSerializer):
 class ShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
-        fields = 'name'
+        fields = ['name']
