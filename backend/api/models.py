@@ -122,7 +122,6 @@ class Ingredient(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт',
-        related_name='ingredients_names',
     )
     specification = models.ForeignKey(
         IngredientSpecification,
@@ -139,14 +138,6 @@ class Ingredient(models.Model):
         },
         verbose_name='Количество',
     )
-
-    # @property
-    # def name(self):
-    #     return self.specification.name
-
-    # @property
-    # def measurement_unit(self):
-    #     return self.specification.measurement_unit
 
     class Meta:
         ordering = ('-id',)

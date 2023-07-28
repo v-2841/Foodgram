@@ -14,13 +14,13 @@ class LimitPageNumberPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 
-def shopping_cart_serializer_to_print_data(data):
+def dict_to_print_data(data):
     result_data = []
     for ingredient in data:
         result_data.append(
-            ingredient['specification']['name']
+            ingredient['name']
             + ' - ' + str(ingredient['amount'])
-            + ', ' + ingredient['specification']['measurement_unit'])
+            + ', ' + ingredient['measurement_unit'])
     result_data.sort()
     return result_data
 
@@ -29,7 +29,7 @@ def generate_pdf(data):
     response = HttpResponse(content_type='application/pdf')
     response[
         'Content-Disposition'] = 'attachment; filename="shopping_cart.pdf"'
-    font_path = os.path.join(settings.BASE_DIR, 'fonts', 'arial.ttf')
+    font_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'arial.ttf')
     pdfmetrics.registerFont(TTFont('Arial', font_path))
     top_margin = 42.52  # 15 mm
     bottom_margin = 56.69  # 20 mm

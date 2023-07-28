@@ -2,6 +2,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
+from api.models import Recipe
 from users.models import User
 
 
@@ -61,3 +62,41 @@ class CreateUserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+
+class RecipeAbbreviationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ['id', 'name', 'image', 'cooking_time']
+
+
+class UserFavoriteSerializer(serializers.ModelSerializer):
+    is_subscribed = SerializerMethodField(method_name='is_subscribed_by_user')
+    recipes = RecipeAbbreviationSerializer(many=True)
+    recipes_count = SerializerMethodField(method_name='user_recipes_count')
+
+    class Meta:
+        model = User
+        fields = [
+            'email', 'id', 'username', 'first_name', 'last_name',
+            'is_subscribed', 'recipes', 'recipes_count',
+        ]
+
+    def is_subscribed_by_user(self, instance):
+        try:
+            return (self.context['request'].user.follower.filter(
+                following=instance).exists())
+        except Exception:
+            return False
+
+    def user_recipes_count(self, instance):
+        return instance.recipes.count()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        recipes_limit = self.context[
+            'request'].query_params.get('recipes_limit', None)
+        if (recipes_limit is not None
+                and len(data['recipes']) > int(recipes_limit)):
+            data['recipes'] = data['recipes'][:int(recipes_limit)]
+        return data

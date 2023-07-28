@@ -44,14 +44,12 @@ class User(AbstractUser):
         blank=False,
         verbose_name='Фамилия',
     )
-
-    @property
-    def is_user(self):
-        return self.role == USER
-
-    @property
-    def is_admin(self):
-        return self.role == ADMIN or self.is_staff
+    following = models.ManyToManyField(
+        'self',
+        through='Follow',
+        symmetrical=False,
+        related_name='followers',
+    )
 
     class Meta:
         ordering = ('username',)
@@ -66,12 +64,14 @@ class Follow(models.Model):
     follower = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='follower',
+        related_name='following_set',
+        verbose_name='Подписчик',
     )
     following = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='following',
+        related_name='follower_set',
+        verbose_name='Автор',
     )
 
     class Meta:
