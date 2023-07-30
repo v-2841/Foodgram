@@ -1,11 +1,31 @@
 import base64
+import binascii
+from concurrent.futures import ThreadPoolExecutor
 
+from django.contrib.auth.password_validation import validate_password
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
-from api.models import Ingredient, IngredientSpecification, Recipe, Tag
-from users.serializers import UserSerializer
+from recipes.models import Ingredient, IngredientSpecification, Recipe, Tag
+from users.models import User
+
+
+class UserSerializer(serializers.ModelSerializer):
+    is_subscribed = SerializerMethodField(method_name='is_subscribed_by_user')
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'id', 'is_subscribed')
+
+    def is_subscribed_by_user(self, instance):
+        try:
+            return (self.context['request'].user.following.filter(
+                username=instance).exists())
+        except Exception:
+            return False
 
 
 class IngredientSpecificationSerializer(serializers.ModelSerializer):
@@ -25,8 +45,22 @@ class Base64ImageField(serializers.ImageField):
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+            max_image_size = 2 * 1024 * 1024
+            if len(imgstr) * 3 / 4 > max_image_size:  # About 2 Mb
+                raise serializers.ValidationError(
+                    "Image size exceeds the maximum allowed size.")
+            try:
+                decoded_image = self.decode_base64_image(imgstr)
+            except (TypeError, binascii.Error):
+                raise serializers.ValidationError("Invalid base64 format")
+            image_name = "image.{0}".format(ext)
+            data = ContentFile(decoded_image, name=image_name)
         return super().to_internal_value(data)
+
+    def decode_base64_image(self, imgstr):
+        with ThreadPoolExecutor() as executor:
+            decoded_image = executor.submit(base64.b64decode, imgstr)
+        return decoded_image.result()
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -127,3 +161,77 @@ class RecipeAbbreviationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ['id', 'name', 'image', 'cooking_time']
+
+
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    current_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('new_password', 'current_password')
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
+
+    def update(self, instance, validated_data):
+        if not instance.check_password(validated_data['current_password']):
+            raise serializers.ValidationError(
+                {"current_password": "Неверный пароль."})
+        instance.set_password(validated_data['new_password'])
+        instance.save()
+        return instance
+
+
+class CreateUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'id', 'password')
+
+    def create(self, validated_data):
+        user = User.objects.create(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
+
+class UserFavoriteSerializer(serializers.ModelSerializer):
+    is_subscribed = SerializerMethodField(method_name='is_subscribed_by_user')
+    recipes = RecipeAbbreviationSerializer(many=True)
+    recipes_count = SerializerMethodField(method_name='user_recipes_count')
+
+    class Meta:
+        model = User
+        fields = [
+            'email', 'id', 'username', 'first_name', 'last_name',
+            'is_subscribed', 'recipes', 'recipes_count',
+        ]
+
+    def is_subscribed_by_user(self, instance):
+        try:
+            return (self.context['request'].user.following.filter(
+                username=instance).exists())
+        except Exception:
+            return False
+
+    def user_recipes_count(self, instance):
+        return instance.recipes.count()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        recipes_limit = self.context[
+            'request'].query_params.get('recipes_limit', None)
+        if (recipes_limit is not None
+                and len(data['recipes']) > int(recipes_limit)):
+            data['recipes'] = data['recipes'][:int(recipes_limit)]
+        return data

@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import CheckConstraint, F, Q, UniqueConstraint
 
-from .validators import validate_username
+from users.validators import validate_username
 
 USER = 'user'
 ADMIN = 'admin'

@@ -1,33 +1,54 @@
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status
+from rest_framework import exceptions, filters, status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.validators import ValidationError
 from rest_framework.viewsets import ModelViewSet
 
 from api.filters import RecipeFilter
-from api.models import IngredientSpecification, Tag, Recipe
 from api.permissions import IsAuthor
 from api.serializers import (
     IngredientSpecificationSerializer, RecipeAbbreviationSerializer,
     RecipeReadSerializer, RecipeWriteSerializer,
-    TagSerializer,
+    TagSerializer, ChangePasswordSerializer, CreateUserSerializer,
+    UserFavoriteSerializer, UserSerializer
     )
-from api.utils import generate_pdf, dict_to_print_data
+from api.utils import dict_to_print_data, generate_pdf
+from recipes.models import IngredientSpecification, Tag, Recipe
+from users.models import User
 
 
 class IngredientSpecificationViewSet(ModelViewSet):
     queryset = IngredientSpecification.objects.all()
     serializer_class = IngredientSpecificationSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = [AllowAny]
     http_method_names = ['get']
+    pagination_class = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_term = self.request.GET.get('name', None)
+        if search_term:
+            starts_with_filter = Q(name__istartswith=search_term)
+            contains_filter = Q(name__icontains=search_term)
+            queryset = queryset.filter(starts_with_filter | contains_filter)
+            queryset = sorted(queryset,
+                              key=lambda x: not x.name.lower().startswith(
+                                search_term.lower()))
+        return queryset
 
 
 class TagViewSet(ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = [AllowAny]
     http_method_names = ['get']
+    pagination_class = None
 
 
 class RecipeViewSet(ModelViewSet):
@@ -104,3 +125,93 @@ class RecipeViewSet(ModelViewSet):
                         'amount': ingredient.amount,
                     }
         return generate_pdf(dict_to_print_data(grouped_ingredients.values()))
+
+
+class UserViewSet(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    http_method_names = ['get', 'post', 'delete']
+
+    def get_permissions(self):
+        if self.action in ['create', 'list']:
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
+    def create(self, request):
+        serializer = CreateUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        raise exceptions.MethodNotAllowed('DELETE')
+
+    @action(
+        detail=False,
+        permission_classes=[IsAuthenticated],
+        url_path='me',
+        )
+    def get_current_user_info(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=['post'],
+        permission_classes=[IsAuthenticated],
+        url_path='set_password',
+        )
+    def change_password(self, request):
+        serializer = ChangePasswordSerializer(request.user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        permission_classes=[IsAuthenticated],
+        url_path='subscriptions',
+    )
+    def get_subscriptions(self, request):
+        queryset = request.user.following.all()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = UserFavoriteSerializer(
+                page,
+                many=True,
+                context={'request': request},
+                )
+            return self.get_paginated_response(serializer.data)
+        serializer = UserFavoriteSerializer(
+                queryset,
+                many=True,
+                context={'request': request},
+                )
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[IsAuthenticated],
+        serializer_class=UserFavoriteSerializer,
+        )
+    def subscribe(self, request, pk=None):
+        author = get_object_or_404(User, pk=pk)
+        if author in request.user.following.all():
+            raise ValidationError({"errors": "вы уже подписаны"})
+        if author == request.user:
+            raise ValidationError({"errors": "нельзя подписаться на себя"})
+        request.user.following.add(author)
+        return Response(UserFavoriteSerializer(author, context={
+            'request': request},).data, status=status.HTTP_201_CREATED)
+
+    @subscribe.mapping.delete
+    def delete_subscribe(self, request, pk=None):
+        author = get_object_or_404(User, pk=pk)
+        if author not in request.user.following.all():
+            raise ValidationError({"errors": "вы не подписаны на автора"})
+        request.user.following.remove(author)
+        return Response(status=status.HTTP_204_NO_CONTENT)

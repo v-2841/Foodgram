@@ -132,4 +132,5 @@ dmypy.json
 .idea
 .vscode/
 backend/media/
+backend/collected_static/
 frontend/
