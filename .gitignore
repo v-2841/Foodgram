@@ -133,3 +133,4 @@ dmypy.json
 .vscode/
 backend/media/
 backend/collected_static/
+frontend/node_modules/
