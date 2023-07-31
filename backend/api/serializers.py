@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.files.base import ContentFile
+from django.db.models import F
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
@@ -82,7 +83,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     image = Base64ImageField(max_length=None)
     author = UserSerializer(read_only=True)
     tags = TagSerializer(many=True)
-    ingredients = IngredientSerializer(source='ingredient_set', many=True)
+    ingredients = SerializerMethodField()
     is_favorited = SerializerMethodField()
     is_in_shopping_cart = SerializerMethodField()
 
@@ -93,6 +94,12 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'name', 'image', 'text', 'cooking_time',
             'is_favorited', 'is_in_shopping_cart',
         ]
+
+    def get_ingredients(self, instance):
+        ingredients = instance.ingredients.values(
+            "id", "name", "measurement_unit", amount=F("ingredient__amount")
+        )
+        return ingredients
 
     def get_is_favorited(self, instance):
         try:
@@ -156,7 +163,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        return RecipeReadSerializer(instance).data
+        return RecipeReadSerializer(instance, context={
+            'request': self.context['request']}).data
 
 
 class RecipeAbbreviationSerializer(serializers.ModelSerializer):
