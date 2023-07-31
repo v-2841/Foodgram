@@ -80,8 +80,6 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     image = Base64ImageField(max_length=None)
-    image_url = serializers.SerializerMethodField('get_image_url',
-                                                  read_only=True)
     author = UserSerializer(read_only=True)
     tags = TagSerializer(many=True)
     ingredients = IngredientSerializer(source='ingredient_set', many=True)
@@ -92,14 +90,9 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = [
             'id', 'tags', 'author', 'ingredients',
-            'name', 'image', 'image_url', 'text', 'cooking_time',
+            'name', 'image', 'text', 'cooking_time',
             'is_favorited', 'is_in_shopping_cart',
         ]
-
-    def get_image_url(self, obj):
-        if obj.image:
-            return obj.image.url
-        return None
 
     def get_is_favorited(self, instance):
         try:

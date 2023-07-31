@@ -20,7 +20,7 @@ def dict_to_print_data(data):
         result_data.append(
             ingredient['name']
             + ' - ' + str(ingredient['amount'])
-            + ', ' + ingredient['measurement_unit'])
+            + ' ' + ingredient['measurement_unit'])
     result_data.sort()
     return result_data
 

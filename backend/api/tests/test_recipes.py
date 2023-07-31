@@ -46,7 +46,7 @@ class UserAPITestCase(TestCase):
             b'\x02\x00\x01\x00\x00\x02\x02\x0C'
             b'\x0A\x00\x3B'
         )
-        uploaded = SimpleUploadedFile(
+        cls.uploaded = SimpleUploadedFile(
             name='small.gif',
             content=small_gif,
             content_type='image/gif'
@@ -56,7 +56,7 @@ class UserAPITestCase(TestCase):
             text='test',
             author=cls.user,
             cooking_time=10,
-            image=uploaded,
+            image=cls.uploaded,
         )
 
     @classmethod
@@ -72,4 +72,14 @@ class UserAPITestCase(TestCase):
                                            + self.token.key)
 
     def test(self):
-        self.assertEqual(1, 1)
+        response = self.client.get('/api/recipes/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        expected_keys = ['count', 'next', 'previous', 'results']
+        self.assertListEqual(sorted(data.keys()), sorted(expected_keys))
+        result_expected_keys = ['id', 'tags', 'author', 'ingredients',
+                                'is_favorited', 'is_in_shopping_cart',
+                                'name', 'image', 'text', 'cooking_time']
+        self.assertListEqual(sorted(data['results'][0].keys()),
+                             sorted(result_expected_keys))
+        print(data['results'][0]['image'], self.recipe.image)
