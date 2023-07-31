@@ -176,7 +176,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'api.utils.LimitPageNumberPagination',
     'PAGE_SIZE': 10,
-    # 'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     # 'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
@@ -184,8 +184,8 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
 }
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    }
-}
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+#     }
+# }

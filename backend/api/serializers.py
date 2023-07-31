@@ -2,13 +2,15 @@ import base64
 import binascii
 from concurrent.futures import ThreadPoolExecutor
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
 from recipes.models import Ingredient, IngredientSpecification, Recipe, Tag
-from users.models import User
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -78,6 +80,8 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     image = Base64ImageField(max_length=None)
+    image_url = serializers.SerializerMethodField('get_image_url',
+                                                  read_only=True)
     author = UserSerializer(read_only=True)
     tags = TagSerializer(many=True)
     ingredients = IngredientSerializer(source='ingredient_set', many=True)
@@ -88,9 +92,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = [
             'id', 'tags', 'author', 'ingredients',
-            'name', 'image', 'text', 'cooking_time',
+            'name', 'image', 'image_url', 'text', 'cooking_time',
             'is_favorited', 'is_in_shopping_cart',
         ]
+
+    def get_image_url(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
     def get_is_favorited(self, instance):
         try:

@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -18,7 +19,8 @@ from api.serializers import (
     )
 from api.utils import dict_to_print_data, generate_pdf
 from recipes.models import IngredientSpecification, Tag, Recipe
-from users.models import User
+
+User = get_user_model()
 
 
 class IngredientSpecificationViewSet(ModelViewSet):
