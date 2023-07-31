@@ -35,7 +35,7 @@ class UserAPITestCase(TestCase):
         )
         cls.tag = Tag.objects.create(
             name='test',
-            color='#ffff00',
+            color='#81D8D0',
             slug='test'
         )
         small_gif = (
