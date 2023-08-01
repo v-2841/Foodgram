@@ -40,7 +40,7 @@ class IngredientSpecificationViewSet(ModelViewSet):
             queryset = queryset.filter(starts_with_filter | contains_filter)
             queryset = sorted(queryset,
                               key=lambda x: not x.name.lower().startswith(
-                                search_term.lower()))
+                                  search_term.lower()))
         return queryset
 
 
@@ -80,7 +80,7 @@ class RecipeViewSet(ModelViewSet):
         recipe.is_favorited.add(request.user)
         return Response(RecipeAbbreviationSerializer(
             recipe, context={'request': request}).data,
-                        status=status.HTTP_201_CREATED)
+                status=status.HTTP_201_CREATED)
 
     @favorite.mapping.delete
     def delete_favorite(self, request, pk=None):
@@ -102,7 +102,7 @@ class RecipeViewSet(ModelViewSet):
         recipe.is_in_shopping_cart.add(request.user)
         return Response(RecipeAbbreviationSerializer(
             recipe, context={'request': request}).data,
-                        status=status.HTTP_201_CREATED)
+                status=status.HTTP_201_CREATED)
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
@@ -184,14 +184,12 @@ class UserViewSet(ModelViewSet):
             serializer = UserFavoriteSerializer(
                 page,
                 many=True,
-                context={'request': request},
-                )
+                context={'request': request},)
             return self.get_paginated_response(serializer.data)
         serializer = UserFavoriteSerializer(
-                queryset,
-                many=True,
-                context={'request': request},
-                )
+            queryset,
+            many=True,
+            context={'request': request},)
         return Response(serializer.data)
 
     @action(
