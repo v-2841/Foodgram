@@ -1,4 +1,4 @@
-### Проект Foodgram – Продуктовый помощник
+### Foodgram – Продуктовый помощник
 На этом сервисе пользователи смогут публиковать рецепты, подписываться 
 на публикации других пользователей, добавлять понравившиеся рецепты в список
 «Избранное», а перед походом в магазин скачивать сводный список 
@@ -43,37 +43,11 @@ git clone git@github.com:v-2841/foodgram-project-react.git
 - Сборка и развертывание контейнеров
 ```bash
 cd infra/
-docker-compose up -d --build
+docker compose up
 ```
 - Выполните миграции, соберите статику, создайте суперпользователя
 ```bash
-docker-compose exec backend python manage.py makemigrations
-docker-compose exec backend python manage.py migrate
-docker-compose exec backend python manage.py collectstatic --no-input
-docker-compose exec backend python manage.py createsuperuser
-```
-- Стандартная админ-панель Django доступна по адресу [`https://localhost/admin/`](https://localhost/admin/)
-- Документация к проекту доступна по адресу [`https://localhost/api/docs/`](`https://localhost/api/docs/`)
-
-#### Запуск API проекта в dev-режиме
-
-- Клонирование удаленного репозитория (см. выше)
-- Создание виртуального окружения и установка зависимостей
-```bash
-cd backend
-python -m venv venv
-. venv/Scripts/activate (windows)
-. venv/bin/activate (linux)
-pip install --upgade pip
-pip install -r -requirements.txt
-```
-- Примените миграции и соберите статику
-```bash
-python manage.py makemigrations
-python manage.py migrate
-python manage.py collectstatic --noinput
-```
-- Запуск сервера
-```bash
-python manage.py runserver 
+docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py collectstatic
+docker compose exec backend python manage.py createsuperuser
 ```
