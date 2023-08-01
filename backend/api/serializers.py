@@ -108,12 +108,12 @@ class RecipeSerializer(serializers.ModelSerializer):
             tags = self.initial_data['tags']
         except KeyError:
             raise serializers.ValidationError(
-                    'Отсутствует поле tags')
+                'Отсутствует поле tags')
         try:
             ingredients = self.initial_data['ingredients']
         except KeyError:
             raise serializers.ValidationError(
-                    'Отсутствует поле ingredients')
+                'Отсутствует поле ingredients')
         for tag in tags:
             if not Tag.objects.filter(id=tag).exists():
                 raise serializers.ValidationError(

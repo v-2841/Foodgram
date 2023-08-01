@@ -159,7 +159,7 @@ class UserAPITestCase(TestCase):
         response = self.authorized_client.post('/api/recipes/',
                                                data=recipe_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(counter+1, Recipe.objects.all().count())
+        self.assertEqual(counter + 1, Recipe.objects.all().count())
         data = response.json()
         expected_keys = ['id', 'tags', 'author', 'ingredients', 'is_favorited',
                          'is_in_shopping_cart', 'name', 'image', 'text',

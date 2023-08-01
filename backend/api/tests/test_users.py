@@ -45,7 +45,7 @@ class UserAPITestCase(TestCase):
         }
         response = self.client.post('/api/users/', data=user_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(counter+1, User.objects.all().count(),
+        self.assertEqual(counter + 1, User.objects.all().count(),
                          'Пользователь не создался')
         data = response.json()
         expected_keys = ['id', 'username', 'email', 'first_name', 'last_name']
@@ -160,7 +160,7 @@ class UserAPITestCase(TestCase):
         })
         self.assertEqual(response.status_code,
                          status.HTTP_200_OK or status.HTTP_201_CREATED)
-        self.assertEqual(counter+1, Token.objects.all().count())
+        self.assertEqual(counter + 1, Token.objects.all().count())
         data = response.json()
         expected_keys = ['auth_token']
         self.assertListEqual(sorted(data.keys()), sorted(expected_keys))

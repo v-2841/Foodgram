@@ -15,8 +15,7 @@ from api.serializers import (
     IngredientSpecificationSerializer, RecipeAbbreviationSerializer,
     RecipeSerializer,
     TagSerializer, ChangePasswordSerializer, CreateUserSerializer,
-    UserFavoriteSerializer, UserSerializer
-    )
+    UserFavoriteSerializer, UserSerializer)
 from api.utils import dict_to_print_data, generate_pdf
 from recipes.models import IngredientSpecification, Tag, Recipe
 
@@ -73,8 +72,7 @@ class RecipeViewSet(ModelViewSet):
         detail=True,
         methods=['post'],
         permission_classes=[IsAuthenticated],
-        serializer_class=RecipeAbbreviationSerializer,
-        )
+        serializer_class=RecipeAbbreviationSerializer,)
     def favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         if recipe in request.user.favorite_recipes.all():
@@ -96,8 +94,7 @@ class RecipeViewSet(ModelViewSet):
         detail=True,
         methods=['post'],
         permission_classes=[IsAuthenticated],
-        serializer_class=RecipeAbbreviationSerializer,
-        )
+        serializer_class=RecipeAbbreviationSerializer,)
     def shopping_cart(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         if recipe in request.user.shopping_cart.all():
@@ -160,8 +157,7 @@ class UserViewSet(ModelViewSet):
     @action(
         detail=False,
         permission_classes=[IsAuthenticated],
-        url_path='me',
-        )
+        url_path='me',)
     def get_current_user_info(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
@@ -170,8 +166,7 @@ class UserViewSet(ModelViewSet):
         detail=False,
         methods=['post'],
         permission_classes=[IsAuthenticated],
-        url_path='set_password',
-        )
+        url_path='set_password',)
     def change_password(self, request):
         serializer = ChangePasswordSerializer(request.user, data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -181,8 +176,7 @@ class UserViewSet(ModelViewSet):
     @action(
         detail=False,
         permission_classes=[IsAuthenticated],
-        url_path='subscriptions',
-    )
+        url_path='subscriptions',)
     def get_subscriptions(self, request):
         queryset = request.user.following.all()
         page = self.paginate_queryset(queryset)
@@ -204,8 +198,7 @@ class UserViewSet(ModelViewSet):
         detail=True,
         methods=['post'],
         permission_classes=[IsAuthenticated],
-        serializer_class=UserFavoriteSerializer,
-        )
+        serializer_class=UserFavoriteSerializer,)
     def subscribe(self, request, pk=None):
         author = get_object_or_404(User, pk=pk)
         if author in request.user.following.all():

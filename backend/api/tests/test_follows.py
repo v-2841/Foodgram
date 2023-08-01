@@ -192,5 +192,5 @@ class UserAPITestCase(TestCase):
         response = self.follower_client.delete(
             f'/api/users/{self.user.id}/subscribe/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(counter-1, Follow.objects.count())
+        self.assertEqual(counter - 1, Follow.objects.count())
         follow.delete()
