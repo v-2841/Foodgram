@@ -79,8 +79,8 @@ class RecipeViewSet(ModelViewSet):
             raise ValidationError({"errors": "вы уже добавили рецепт"})
         recipe.is_favorited.add(request.user)
         return Response(RecipeAbbreviationSerializer(
-            recipe, context={'request': request}).data,
-                status=status.HTTP_201_CREATED)
+                        recipe, context={'request': request}).data,
+                        status=status.HTTP_201_CREATED)
 
     @favorite.mapping.delete
     def delete_favorite(self, request, pk=None):
@@ -101,8 +101,8 @@ class RecipeViewSet(ModelViewSet):
             raise ValidationError({"errors": "вы уже добавили рецепт"})
         recipe.is_in_shopping_cart.add(request.user)
         return Response(RecipeAbbreviationSerializer(
-            recipe, context={'request': request}).data,
-                status=status.HTTP_201_CREATED)
+                        recipe, context={'request': request}).data,
+                        status=status.HTTP_201_CREATED)
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
