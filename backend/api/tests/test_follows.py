@@ -1,5 +1,4 @@
 # type: ignore
-# flake8: noqa
 import re
 import shutil
 import tempfile
@@ -87,7 +86,8 @@ class UserAPITestCase(TestCase):
         self.client = APIClient()
         self.follower_token = Token.objects.create(user=self.follower)
         self.follower_client = APIClient()
-        self.follower_client.credentials(HTTP_AUTHORIZATION='Token ' + self.follower_token.key)
+        self.follower_client.credentials(HTTP_AUTHORIZATION='Token '
+                                         + self.follower_token.key)
 
     def test_get_subscriptions(self):
         """Проверка доступа к эндпоинту
@@ -105,8 +105,10 @@ class UserAPITestCase(TestCase):
         self.assertListEqual(sorted(data.keys()), sorted(expected_keys))
         result = data['results'][0]
         result_expected_keys = ['email', 'id', 'username', 'first_name',
-                                'last_name', 'is_subscribed', 'recipes', 'recipes_count']
-        self.assertListEqual(sorted(result.keys()), sorted(result_expected_keys))
+                                'last_name', 'is_subscribed', 'recipes',
+                                'recipes_count']
+        self.assertListEqual(sorted(result.keys()),
+                             sorted(result_expected_keys))
         self.assertEqual(result['id'], self.user.id)
         self.assertEqual(result['username'], self.user.username)
         self.assertEqual(result['email'], self.user.email)
@@ -117,7 +119,8 @@ class UserAPITestCase(TestCase):
         self.assertTrue(result['is_subscribed'])
         recipe = result['recipes'][0]
         recipe_expected_keys = ['id', 'name', 'image', 'cooking_time']
-        self.assertListEqual(sorted(recipe.keys()), sorted(recipe_expected_keys))
+        self.assertListEqual(sorted(recipe.keys()),
+                             sorted(recipe_expected_keys))
         self.assertEqual(recipe['id'], self.recipe.id)
         self.assertEqual(recipe['name'], self.recipe.name)
         self.assertEqual(recipe['cooking_time'], self.recipe.cooking_time)
@@ -135,11 +138,13 @@ class UserAPITestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         response = self.follower_client.post('/api/users/0/subscribe/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        response = self.follower_client.post(f'/api/users/{self.user.id}/subscribe/')
+        response = self.follower_client.post(
+            f'/api/users/{self.user.id}/subscribe/')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = response.json()
         expected_keys = ['email', 'id', 'username', 'first_name',
-                         'last_name', 'is_subscribed', 'recipes', 'recipes_count']
+                         'last_name', 'is_subscribed', 'recipes',
+                         'recipes_count']
         self.assertListEqual(sorted(data.keys()), sorted(expected_keys))
         self.assertEqual(data['id'], self.user.id)
         self.assertEqual(data['username'], self.user.username)
@@ -151,15 +156,18 @@ class UserAPITestCase(TestCase):
         self.assertTrue(data['is_subscribed'])
         recipe = data['recipes'][0]
         recipe_expected_keys = ['id', 'name', 'image', 'cooking_time']
-        self.assertListEqual(sorted(recipe.keys()), sorted(recipe_expected_keys))
+        self.assertListEqual(sorted(recipe.keys()),
+                             sorted(recipe_expected_keys))
         self.assertEqual(recipe['id'], self.recipe.id)
         self.assertEqual(recipe['name'], self.recipe.name)
         self.assertEqual(recipe['cooking_time'], self.recipe.cooking_time)
         image = r'http://testserver/media/recipes/images/small(?:_\w+)?\.gif'
         self.assertTrue(re.match(image, recipe['image']))
-        response = self.follower_client.post(f'/api/users/{self.user.id}/subscribe/')
+        response = self.follower_client.post(
+            f'/api/users/{self.user.id}/subscribe/')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        response = self.follower_client.post(f'/api/users/{self.follower.id}/subscribe/')
+        response = self.follower_client.post(
+            f'/api/users/{self.follower.id}/subscribe/')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         Follow.objects.filter(
             follower=self.follower,
@@ -169,7 +177,8 @@ class UserAPITestCase(TestCase):
     def test_delete_subscribe(self):
         """Проверка доступа к эндпоинту
         /api/users/{id}/subscribe/ методом POST"""
-        response = self.follower_client.delete(f'/api/users/{self.user.id}/subscribe/')
+        response = self.follower_client.delete(
+            f'/api/users/{self.user.id}/subscribe/')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         follow = Follow.objects.create(
             follower=self.follower,
@@ -180,6 +189,8 @@ class UserAPITestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         response = self.follower_client.delete('/api/users/0/subscribe/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        response = self.follower_client.delete(f'/api/users/{self.user.id}/subscribe/')
+        response = self.follower_client.delete(
+            f'/api/users/{self.user.id}/subscribe/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(counter-1, Follow.objects.count())
+        follow.delete()

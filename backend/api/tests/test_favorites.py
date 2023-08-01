@@ -1,5 +1,4 @@
 # type: ignore
-# flake8: noqa
 import re
 import shutil
 import tempfile
@@ -90,7 +89,8 @@ class UserAPITestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         response = self.authorized_client.post('/api/recipes/0/favorite/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        response = self.authorized_client.post(f'/api/recipes/{self.recipe.id}/favorite/')
+        response = self.authorized_client.post(
+            f'/api/recipes/{self.recipe.id}/favorite/')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = response.json()
         expected_keys = ['id', 'name', 'image', 'cooking_time']
@@ -100,21 +100,26 @@ class UserAPITestCase(TestCase):
         self.assertEqual(data['cooking_time'], self.recipe.cooking_time)
         image = r'http://testserver/media/recipes/images/small(?:_\w+)?\.gif'
         self.assertTrue(re.match(image, data['image']))
-        response = self.authorized_client.post(f'/api/recipes/{self.recipe.id}/favorite/')
+        response = self.authorized_client.post(
+            f'/api/recipes/{self.recipe.id}/favorite/')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.recipe.is_favorited.remove(self.user)
 
     def test_delete_recipe_from_favorites(self):
         """Проверка доступа к эндпоинту
         /api/recipes/{id}/favorite/ методом DELETE"""
-        response = self.client.delete(f'/api/recipes/{self.recipe.id}/favorite/')
+        response = self.client.delete(
+            f'/api/recipes/{self.recipe.id}/favorite/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         response = self.authorized_client.post('/api/recipes/0/favorite/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        response = self.authorized_client.delete(f'/api/recipes/{self.recipe.id}/favorite/')
+        response = self.authorized_client.delete(
+            f'/api/recipes/{self.recipe.id}/favorite/')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.recipe.is_favorited.add(self.user)
-        response = self.authorized_client.delete(f'/api/recipes/{self.recipe.id}/favorite/')
+        response = self.authorized_client.delete(
+            f'/api/recipes/{self.recipe.id}/favorite/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        response = self.authorized_client.delete(f'/api/recipes/{self.recipe.id}/favorite/')
+        response = self.authorized_client.delete(
+            f'/api/recipes/{self.recipe.id}/favorite/')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

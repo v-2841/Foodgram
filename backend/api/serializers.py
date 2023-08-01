@@ -1,3 +1,4 @@
+# type: ignore
 import base64
 import binascii
 from concurrent.futures import ThreadPoolExecutor
