@@ -13,7 +13,7 @@ from api.filters import RecipeFilter
 from api.permissions import IsAuthor
 from api.serializers import (
     IngredientSpecificationSerializer, RecipeAbbreviationSerializer,
-    RecipeReadSerializer, RecipeWriteSerializer,
+    RecipeSerializer,
     TagSerializer, ChangePasswordSerializer, CreateUserSerializer,
     UserFavoriteSerializer, UserSerializer
     )
@@ -58,6 +58,7 @@ class RecipeViewSet(ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
     filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
+    serializer_class = RecipeSerializer
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -68,12 +69,6 @@ class RecipeViewSet(ModelViewSet):
             permission_classes = [IsAuthor]
         return [permission() for permission in permission_classes]
 
-    def get_serializer_class(self):
-        if self.action in ['list', 'retrieve']:
-            return RecipeReadSerializer
-        else:
-            return RecipeWriteSerializer
-
     @action(
         detail=True,
         methods=['post'],
@@ -81,14 +76,20 @@ class RecipeViewSet(ModelViewSet):
         serializer_class=RecipeAbbreviationSerializer,
         )
     def favorite(self, request, pk=None):
-        recipe = Recipe.objects.get(pk=pk)
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if recipe in request.user.favorite_recipes.all():
+            raise ValidationError({"errors": "вы уже добавили рецепт"})
         recipe.is_favorited.add(request.user)
-        return Response(RecipeAbbreviationSerializer(recipe).data,
+        return Response(RecipeAbbreviationSerializer(
+            recipe, context={'request': request}).data,
                         status=status.HTTP_201_CREATED)
 
     @favorite.mapping.delete
     def delete_favorite(self, request, pk=None):
-        Recipe.objects.get(pk=pk).is_favorited.remove(request.user)
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if recipe not in request.user.favorite_recipes.all():
+            raise ValidationError({"errors": "вы не добавляли рецепт"})
+        recipe.is_favorited.remove(request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -98,21 +99,26 @@ class RecipeViewSet(ModelViewSet):
         serializer_class=RecipeAbbreviationSerializer,
         )
     def shopping_cart(self, request, pk=None):
-        recipe = Recipe.objects.get(pk=pk)
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if recipe in request.user.shopping_cart.all():
+            raise ValidationError({"errors": "вы уже добавили рецепт"})
         recipe.is_in_shopping_cart.add(request.user)
-        return Response(RecipeAbbreviationSerializer(recipe).data,
+        return Response(RecipeAbbreviationSerializer(
+            recipe, context={'request': request}).data,
                         status=status.HTTP_201_CREATED)
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
-        Recipe.objects.get(pk=pk).is_in_shopping_cart.remove(request.user)
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if recipe not in request.user.shopping_cart.all():
+            raise ValidationError({"errors": "вы не добавляли рецепт"})
+        recipe.is_in_shopping_cart.remove(request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(
-        detail=False,
-        permission_classes=[IsAuthenticated],
-    )
+    @action(detail=False)
     def download_shopping_cart(self, request):
+        if not request.user.is_authenticated:
+            raise exceptions.NotAuthenticated()
         grouped_ingredients = {}
         for recipe in request.user.shopping_cart.all():
             for ingredient in recipe.ingredient_set.all():

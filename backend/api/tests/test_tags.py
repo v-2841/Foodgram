@@ -25,6 +25,10 @@ class TagAPITestCase(TestCase):
         data = response.json()[0]
         expected_keys = ['id', 'name', 'color', 'slug']
         self.assertListEqual(sorted(data.keys()), sorted(expected_keys))
+        self.assertEqual(data['id'], self.tag.id)
+        self.assertEqual(data['name'], self.tag.name)
+        self.assertEqual(data['color'], self.tag.color)
+        self.assertEqual(data['slug'], self.tag.slug)
 
     def test_tag_page(self):
         """Проверка доступа к эндпоинту /api/tags/{id}/ методом GET"""
@@ -35,3 +39,7 @@ class TagAPITestCase(TestCase):
         data = response.json()
         expected_keys = ['id', 'name', 'color', 'slug']
         self.assertListEqual(sorted(data.keys()), sorted(expected_keys))
+        self.assertEqual(data['id'], self.tag.id)
+        self.assertEqual(data['name'], self.tag.name)
+        self.assertEqual(data['color'], self.tag.color)
+        self.assertEqual(data['slug'], self.tag.slug)

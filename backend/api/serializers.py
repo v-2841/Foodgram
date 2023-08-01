@@ -66,23 +66,10 @@ class Base64ImageField(serializers.ImageField):
         return decoded_image.result()
 
 
-class IngredientSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(
-        queryset=IngredientSpecification.objects.all(),
-    )
-    name = serializers.ReadOnlyField(source='specification.name')
-    measurement_unit = serializers.ReadOnlyField(
-        source='specification.measurement_unit')
-
-    class Meta:
-        model = Ingredient
-        fields = ['id', 'name', 'measurement_unit', 'amount']
-
-
-class RecipeReadSerializer(serializers.ModelSerializer):
+class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField(max_length=None)
     author = UserSerializer(read_only=True)
-    tags = TagSerializer(many=True)
+    tags = TagSerializer(many=True, read_only=True)
     ingredients = SerializerMethodField()
     is_favorited = SerializerMethodField()
     is_in_shopping_cart = SerializerMethodField()
@@ -115,33 +102,40 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         except Exception:
             return False
 
-
-class RecipeWriteSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
-    image = Base64ImageField(max_length=None)
-    ingredients = IngredientSerializer(many=True)
-    tags = serializers.PrimaryKeyRelatedField(
-        queryset=Tag.objects.all(),
-        many=True,
-    )
-
-    class Meta:
-        model = Recipe
-        fields = ['ingredients', 'tags', 'image', 'name',
-                  'text', 'cooking_time', 'author']
-
-    def validate_tags(self, tags):
+    def validate(self, data):
+        try:
+            tags = self.initial_data['tags']
+        except KeyError:
+            raise serializers.ValidationError(
+                    'Отсутствует поле tags')
+        try:
+            ingredients = self.initial_data['ingredients']
+        except KeyError:
+            raise serializers.ValidationError(
+                    'Отсутствует поле ingredients')
         for tag in tags:
-            if not Tag.objects.filter(id=tag.id).exists():
+            if not Tag.objects.filter(id=tag).exists():
                 raise serializers.ValidationError(
                     'Указанного тега не существует')
-        return tags
+        for ingredient in ingredients:
+            if not IngredientSpecification.objects.filter(
+                    id=ingredient['id']).exists():
+                raise serializers.ValidationError(
+                    'Указанного ингредиента не существует')
+        data.update(
+            {
+                "tags": Tag.objects.filter(pk__in=tags),
+                "ingredients": ingredients,
+            }
+        )
+        return data
 
     def create_ingredients(self, recipe, ingredients):
         for ingredient in ingredients:
             Ingredient.objects.create(
                 recipe=recipe,
-                specification=ingredient['id'],
+                specification=IngredientSpecification.objects.get(
+                    pk=ingredient['id']),
                 amount=ingredient['amount'],
             )
 
@@ -161,10 +155,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         self.create_ingredients(instance, ingredients)
         return super().update(instance, validated_data)
-
-    def to_representation(self, instance):
-        return RecipeReadSerializer(instance, context={
-            'request': self.context['request']}).data
 
 
 class RecipeAbbreviationSerializer(serializers.ModelSerializer):

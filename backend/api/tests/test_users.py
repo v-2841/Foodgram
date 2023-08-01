@@ -33,6 +33,9 @@ class UserAPITestCase(TestCase):
     def test_create_user(self):
         """Проверка создания нового пользователя POST методом /api/users/"""
         counter = User.objects.all().count()
+        response = self.client.post('/api/users/', data={})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(counter, User.objects.all().count())
         user_data = {
             'username': 'test_user',
             'password': 'test_password',
@@ -47,14 +50,10 @@ class UserAPITestCase(TestCase):
         data = response.json()
         expected_keys = ['id', 'username', 'email', 'first_name', 'last_name']
         self.assertListEqual(sorted(data.keys()), sorted(expected_keys))
-
-    def test_create_user_invalid_data(self):
-        """Проверка доступа к эндпоинту /api/users/
-        методом POST с неверными данными"""
-        counter = User.objects.all().count()
-        response = self.client.post('/api/users/', data={})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(counter, User.objects.all().count())
+        self.assertEqual(data['username'], 'test_user')
+        self.assertEqual(data['email'], 'test@test.com')
+        self.assertEqual(data['first_name'], 'first_name')
+        self.assertEqual(data['last_name'], 'last_name')
 
     def test_get_users_list(self):
         """Проверка доступа к эндпоинту /api/users/ методом GET"""
@@ -63,10 +62,17 @@ class UserAPITestCase(TestCase):
         data = response.json()
         expected_keys = ['count', 'next', 'previous', 'results']
         self.assertListEqual(sorted(data.keys()), sorted(expected_keys))
+        result = data['results'][0]
         result_expected_keys = ['email', 'id', 'username', 'first_name',
                                 'last_name', 'is_subscribed']
-        self.assertListEqual(sorted(data['results'][0].keys()),
+        self.assertListEqual(sorted(result.keys()),
                              sorted(result_expected_keys))
+        self.assertEqual(result['id'], self.user.id)
+        self.assertEqual(result['username'], self.user.username)
+        self.assertEqual(result['email'], self.user.email)
+        self.assertEqual(result['first_name'], self.user.first_name)
+        self.assertEqual(result['last_name'], self.user.last_name)
+        self.assertFalse(result['is_subscribed'])
 
     def test_user_page(self):
         """Проверка доступа к эндпоинту /api/users/{id}/ методом GET"""
@@ -80,6 +86,12 @@ class UserAPITestCase(TestCase):
         expected_keys = ['email', 'id', 'username',
                          'first_name', 'last_name', 'is_subscribed']
         self.assertListEqual(sorted(data.keys()), sorted(expected_keys))
+        self.assertEqual(data['id'], self.user.id)
+        self.assertEqual(data['username'], self.user.username)
+        self.assertEqual(data['email'], self.user.email)
+        self.assertEqual(data['first_name'], self.user.first_name)
+        self.assertEqual(data['last_name'], self.user.last_name)
+        self.assertFalse(data['is_subscribed'])
 
     def test_me_page(self):
         """Проверка доступа к эндпоинту /api/users/me/ методом GET"""
@@ -91,7 +103,12 @@ class UserAPITestCase(TestCase):
         expected_keys = ['email', 'id', 'username',
                          'first_name', 'last_name', 'is_subscribed']
         self.assertListEqual(sorted(data.keys()), sorted(expected_keys))
-        self.assertEqual(self.user.username, data['username'])
+        self.assertEqual(data['id'], self.user.id)
+        self.assertEqual(data['username'], self.user.username)
+        self.assertEqual(data['email'], self.user.email)
+        self.assertEqual(data['first_name'], self.user.first_name)
+        self.assertEqual(data['last_name'], self.user.last_name)
+        self.assertFalse(data['is_subscribed'])
 
     def test_delete_user(self):
         """Проверка отсутствия доступа к эндпоинту /api/users/{id}/
