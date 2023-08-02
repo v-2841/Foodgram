@@ -1,4 +1,4 @@
-name: Main Taski Workflow
+name: Main lol Workflow
 on:
   push:
     branches:
