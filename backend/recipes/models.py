@@ -73,6 +73,11 @@ class Recipe(models.Model):
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
     )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата публикации',
+        editable=False,
+    )
     image = models.ImageField(
         upload_to='recipes/images/',
         blank=True,
@@ -117,7 +122,7 @@ class Recipe(models.Model):
     ingredients_names.fget.short_description = 'Список ингредиентов'
 
     class Meta:
-        ordering = ('-id',)
+        ordering = ('-pub_date',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -141,7 +146,7 @@ class Ingredient(models.Model):
     )
 
     class Meta:
-        ordering = ('-id',)
+        ordering = ('recipe__name',)
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
 
@@ -163,7 +168,7 @@ class TagRecipe(models.Model):
     )
 
     class Meta:
-        ordering = ('-id',)
+        ordering = ('recipe__name',)
         verbose_name = 'Теги рецепта'
         verbose_name_plural = 'Теги рецептов'
         constraints = [
@@ -188,7 +193,7 @@ class RecipeUser(models.Model):
     )
 
     class Meta:
-        ordering = ('-id',)
+        ordering = ('recipe__name',)
         abstract = True
 
 

@@ -10,13 +10,13 @@ from rest_framework.viewsets import ModelViewSet
 
 from api.filters import RecipeFilter
 from api.permissions import IsAuthor
-from api.serializers import (
-    IngredientSpecificationSerializer, RecipeAbbreviationSerializer,
-    RecipeSerializer, RecipeSerializerPost,
-    TagSerializer, ChangePasswordSerializer, CreateUserSerializer,
-    UserFavoriteSerializer, UserSerializer)
+from api.serializers import (ChangePasswordSerializer, CreateUserSerializer,
+                             IngredientSpecificationSerializer,
+                             RecipeAbbreviationSerializer, RecipeSerializer,
+                             RecipeSerializerPost, TagSerializer,
+                             UserFavoriteSerializer, UserSerializer)
 from api.utils import dict_to_print_data, generate_pdf
-from recipes.models import IngredientSpecification, Tag, Recipe
+from recipes.models import IngredientSpecification, Recipe, Tag
 from users.models import User
 
 

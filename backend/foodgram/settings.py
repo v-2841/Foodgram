@@ -9,11 +9,11 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-s7w+-n@d%ew1^rr=+q%jq36!pj7g!3wtkrshdy&llh9t086ii@'
+SECRET_KEY = os.getenv('SECRET_KEY', 'project_secret_key')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', 't', '1')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = [i.strip() for i in os.getenv('ALLOWED_HOSTS', '127.0.0.1, localhost').split(',')]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    # 'corsheaders',
     'djoser',
     'django_filters',
     'api.apps.ApiConfig',
@@ -35,18 +34,12 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-# CORS_ALLOWED_ORIGINS = [
-#     'http://localhost:3000',
-# ]
-# CORS_URLS_REGEX = r'^/api/.*$'
 
 ROOT_URLCONF = 'foodgram.urls'
 
@@ -74,17 +67,15 @@ DATABASES = {
         'NAME': os.getenv('POSTGRES_DB', 'django'),
         'USER': os.getenv('POSTGRES_USER', 'django_user'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'mysecretpassword'),
-        'HOST': 'localhost',
-        'PORT': '',
-        # 'HOST': os.getenv('DB_HOST', ''),
-        # 'PORT': os.getenv('DB_PORT', 5432)
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', 5432)
     },
     'TEST': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'test',
         'USER': 'django_user',
         'PASSWORD': 'mysecretpassword',
-        'HOST': 'localhost',
+        'HOST': '127.0.0.1',
         'PORT': '',
     }
 }
@@ -130,8 +121,6 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-        # 'rest_framework.authentication.BasicAuthentication',
-        # 'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': 'api.paginations.LimitPageNumberPagination',
     'PAGE_SIZE': 10,
@@ -144,7 +133,6 @@ REST_FRAMEWORK = {
         'user': '10000/day',
         'anon': '1000/day',
     }
-    # 'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 DJOSER = {
@@ -153,4 +141,4 @@ DJOSER = {
 
 NAME_LENGHT = 200
 EMAIL_LENGHT = 254
-USERPROFILE_LENGHT = 150
+USER_PROFILE_LENGHT = 150

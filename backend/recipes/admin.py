@@ -1,9 +1,7 @@
 from django.contrib import admin
 
-from recipes.models import (
-    Tag, Ingredient, IngredientSpecification, Recipe, TagRecipe,
-    UserFavoritedRecipe, UserShoppingCart,
-)
+from recipes.models import (Ingredient, IngredientSpecification, Recipe, Tag,
+                            TagRecipe, UserFavoritedRecipe, UserShoppingCart)
 
 
 class IngredientInline(admin.TabularInline):
@@ -24,11 +22,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
 
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = [
-        'specification',
-        'recipe',
-        'amount',
-    ]
+    list_display = ['specification', 'recipe', 'amount']
     search_fields = ['specification__name']
 
 

@@ -9,7 +9,7 @@ from users.validators import validate_username
 class User(AbstractUser):
     username = models.CharField(
         validators=(validate_username,),
-        max_length=settings.USERPROFILE_LENGHT,
+        max_length=settings.USER_PROFILE_LENGHT,
         blank=False,
         unique=True,
         verbose_name='Ник',
@@ -21,12 +21,12 @@ class User(AbstractUser):
         verbose_name='Электронная почта',
     )
     first_name = models.CharField(
-        max_length=settings.USERPROFILE_LENGHT,
+        max_length=settings.USER_PROFILE_LENGHT,
         blank=False,
         verbose_name='Имя',
     )
     last_name = models.CharField(
-        max_length=settings.USERPROFILE_LENGHT,
+        max_length=settings.USER_PROFILE_LENGHT,
         blank=False,
         verbose_name='Фамилия',
     )

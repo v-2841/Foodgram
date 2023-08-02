@@ -11,4 +11,3 @@ PyYAML==6.0
 python-dotenv==1.0.0
 django-filter==21.1
 reportlab==4.0.4
-django-cors-headers==4.2.0
