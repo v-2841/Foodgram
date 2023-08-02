@@ -2,7 +2,7 @@ name: Main lol Workflow
 on:
   push:
     branches:
-      - main
+      - master
 jobs:
   checkout-and-print-tree:
     runs-on: ubuntu-latest
