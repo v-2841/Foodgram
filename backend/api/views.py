@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -13,13 +12,12 @@ from api.filters import RecipeFilter
 from api.permissions import IsAuthor
 from api.serializers import (
     IngredientSpecificationSerializer, RecipeAbbreviationSerializer,
-    RecipeSerializer,
+    RecipeSerializer, RecipeSerializerPost,
     TagSerializer, ChangePasswordSerializer, CreateUserSerializer,
     UserFavoriteSerializer, UserSerializer)
 from api.utils import dict_to_print_data, generate_pdf
 from recipes.models import IngredientSpecification, Tag, Recipe
-
-User = get_user_model()
+from users.models import User
 
 
 class IngredientSpecificationViewSet(ModelViewSet):
@@ -57,7 +55,6 @@ class RecipeViewSet(ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
     filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
-    serializer_class = RecipeSerializer
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -67,6 +64,12 @@ class RecipeViewSet(ModelViewSet):
         else:
             permission_classes = [IsAuthor]
         return [permission() for permission in permission_classes]
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return RecipeSerializer
+        else:
+            return RecipeSerializerPost
 
     @action(
         detail=True,
@@ -119,11 +122,11 @@ class RecipeViewSet(ModelViewSet):
         grouped_ingredients = {}
         for recipe in request.user.shopping_cart.all():
             for ingredient in recipe.ingredient_set.all():
-                key = ingredient.specification.id
-                if key in grouped_ingredients:
-                    grouped_ingredients[key]['amount'] += ingredient.amount
+                pk = ingredient.specification.pk
+                if pk in grouped_ingredients:
+                    grouped_ingredients[pk]['amount'] += ingredient.amount
                 else:
-                    grouped_ingredients[key] = {
+                    grouped_ingredients[pk] = {
                         'name': ingredient.specification.name,
                         'measurement_unit':
                         ingredient.specification.measurement_unit,

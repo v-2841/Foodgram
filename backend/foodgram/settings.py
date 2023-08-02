@@ -106,7 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'ru-RU'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -133,7 +133,7 @@ REST_FRAMEWORK = {
         # 'rest_framework.authentication.BasicAuthentication',
         # 'rest_framework.authentication.SessionAuthentication',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'api.utils.LimitPageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'api.paginations.LimitPageNumberPagination',
     'PAGE_SIZE': 10,
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'DEFAULT_THROTTLE_CLASSES': [
@@ -150,3 +150,7 @@ REST_FRAMEWORK = {
 DJOSER = {
     'LOGIN_FIELD': 'email',
 }
+
+NAME_LENGHT = 200
+EMAIL_LENGHT = 254
+USERPROFILE_LENGHT = 150

@@ -3,15 +3,10 @@ from datetime import datetime
 
 from django.conf import settings
 from django.http import HttpResponse
-from rest_framework.pagination import PageNumberPagination
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-
-
-class LimitPageNumberPagination(PageNumberPagination):
-    page_size_query_param = 'limit'
 
 
 def dict_to_print_data(data):

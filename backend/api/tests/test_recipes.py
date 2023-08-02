@@ -197,7 +197,7 @@ class UserAPITestCase(TestCase):
         self.assertEqual(data['name'], 'create_test')
         self.assertEqual(data['text'], 'create_test')
         self.assertEqual(data['cooking_time'], 50)
-        image = r'http://testserver/media/recipes/images/image(?:_\w+)?\.png'
+        image = r'http://testserver/media/recipes/images/(.+?)\.png'
         self.assertTrue(re.match(image, data['image']))
 
     def test_update_recipe(self):
@@ -310,7 +310,7 @@ class UserAPITestCase(TestCase):
         self.assertEqual(data['name'], 'update_test')
         self.assertEqual(data['text'], 'update_test')
         self.assertEqual(data['cooking_time'], 50)
-        image = r'http://testserver/media/recipes/images/image(?:_\w+)?\.png'
+        image = r'http://testserver/media/recipes/images/(.+?)\.png'
         self.assertTrue(re.match(image, data['image']))
 
     def test_delete_recipe(self):

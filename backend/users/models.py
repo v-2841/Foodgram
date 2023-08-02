@@ -1,46 +1,32 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import CheckConstraint, F, Q, UniqueConstraint
 
 from users.validators import validate_username
 
-USER = 'user'
-ADMIN = 'admin'
-
-ROLE_CHOICES = [
-    (USER, USER),
-    (ADMIN, ADMIN),
-]
-
 
 class User(AbstractUser):
     username = models.CharField(
         validators=(validate_username,),
-        max_length=150,
+        max_length=settings.USERPROFILE_LENGHT,
         blank=False,
         unique=True,
         verbose_name='Ник',
     )
     email = models.EmailField(
-        max_length=254,
+        max_length=settings.EMAIL_LENGHT,
         blank=False,
         unique=True,
         verbose_name='Электронная почта',
     )
-    role = models.CharField(
-        max_length=16,
-        choices=ROLE_CHOICES,
-        default=USER,
-        blank=False,
-        verbose_name='Роль',
-    )
     first_name = models.CharField(
-        max_length=150,
+        max_length=settings.USERPROFILE_LENGHT,
         blank=False,
         verbose_name='Имя',
     )
     last_name = models.CharField(
-        max_length=150,
+        max_length=settings.USERPROFILE_LENGHT,
         blank=False,
         verbose_name='Фамилия',
     )
@@ -58,6 +44,18 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    @property
+    def recipes_counter(self):
+        return self.recipes.all().count()
+
+    recipes_counter.fget.short_description = 'Количество рецептов'
+
+    @property
+    def followers_counter(self):
+        return self.followers.all().count()
+
+    followers_counter.fget.short_description = 'Количество подписчиков'
 
 
 class Follow(models.Model):

@@ -1,18 +1,11 @@
-# type: ignore
-import base64
-import binascii
-from concurrent.futures import ThreadPoolExecutor
-
-from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from django.core.files.base import ContentFile
 from django.db.models import F
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
 from recipes.models import Ingredient, IngredientSpecification, Recipe, Tag
-
-User = get_user_model()
+from users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -42,29 +35,6 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'name', 'color', 'slug']
-
-
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            max_image_size = 2 * 1024 * 1024
-            if len(imgstr) * 3 / 4 > max_image_size:  # About 2 Mb
-                raise serializers.ValidationError(
-                    "Image size exceeds the maximum allowed size.")
-            try:
-                decoded_image = self.decode_base64_image(imgstr)
-            except (TypeError, binascii.Error):
-                raise serializers.ValidationError("Invalid base64 format")
-            image_name = "image.{0}".format(ext)
-            data = ContentFile(decoded_image, name=image_name)
-        return super().to_internal_value(data)
-
-    def decode_base64_image(self, imgstr):
-        with ThreadPoolExecutor() as executor:
-            decoded_image = executor.submit(base64.b64decode, imgstr)
-        return decoded_image.result()
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -103,40 +73,71 @@ class RecipeSerializer(serializers.ModelSerializer):
         except Exception:
             return False
 
+
+class IngredientSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=IngredientSpecification.objects.all(),
+    )
+    name = serializers.ReadOnlyField(source='specification.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='specification.measurement_unit')
+    amount = serializers.IntegerField(min_value=1)
+
+    class Meta:
+        model = Ingredient
+        fields = ['id', 'name', 'measurement_unit', 'amount']
+
+
+class RecipeSerializerPost(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+    image = Base64ImageField(max_length=None)
+    ingredients = IngredientSerializer(many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
+        many=True,
+    )
+    cooking_time = serializers.IntegerField(min_value=1)
+
+    class Meta:
+        model = Recipe
+        fields = ['ingredients', 'tags', 'image', 'name',
+                  'text', 'cooking_time', 'author']
+
+    def validate_tags(self, tags):
+        if not tags:
+            raise serializers.ValidationError(
+                'Вы не указали ни одного тега')
+        tags_ids = self.initial_data['tags']
+        if sorted(list(set(tags_ids))) != sorted(tags_ids):
+            raise serializers.ValidationError(
+                'Вы указали одинаковые теги')
+        return tags
+
+    def validate_ingredients(self, ingredients):
+        if not ingredients:
+            raise serializers.ValidationError(
+                'Вы не указали ни одного ингредиента')
+        ingredients_data = self.initial_data['ingredients']
+        ingredients_ids = []
+        for ingredient in ingredients_data:
+            ingredients_ids.append(ingredient['id'])
+        if sorted(list(set(ingredients_ids))) != sorted(ingredients_ids):
+            raise serializers.ValidationError(
+                'Вы указали одинаковые ингредиенты')
+        return ingredients
+
     def validate(self, data):
-        try:
-            tags = self.initial_data['tags']
-        except KeyError:
-            raise serializers.ValidationError(
-                'Отсутствует поле tags')
-        try:
-            ingredients = self.initial_data['ingredients']
-        except KeyError:
-            raise serializers.ValidationError(
-                'Отсутствует поле ingredients')
-        for tag in tags:
-            if not Tag.objects.filter(id=tag).exists():
-                raise serializers.ValidationError(
-                    'Указанного тега не существует')
-        for ingredient in ingredients:
-            if not IngredientSpecification.objects.filter(
-                    id=ingredient['id']).exists():
-                raise serializers.ValidationError(
-                    'Указанного ингредиента не существует')
-        data.update(
-            {
-                "tags": Tag.objects.filter(pk__in=tags),
-                "ingredients": ingredients,
-            }
-        )
+        if 'tags' not in self.initial_data:
+            raise serializers.ValidationError('Отсутствует поле tags')
+        if 'ingredients' not in self.initial_data:
+            raise serializers.ValidationError('Отсутствует поле ingredients')
         return data
 
     def create_ingredients(self, recipe, ingredients):
         for ingredient in ingredients:
             Ingredient.objects.create(
                 recipe=recipe,
-                specification=IngredientSpecification.objects.get(
-                    pk=ingredient['id']),
+                specification=ingredient['id'],
                 amount=ingredient['amount'],
             )
 
@@ -156,6 +157,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         self.create_ingredients(instance, ingredients)
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        return RecipeSerializer(instance, context={
+            'request': self.context['request']}).data
 
 
 class RecipeAbbreviationSerializer(serializers.ModelSerializer):

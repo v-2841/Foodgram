@@ -1,11 +1,13 @@
 from django.contrib import admin
-from django.contrib.auth import get_user_model
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
 
-from .models import Follow
+from users.models import Follow, User
 
-User = get_user_model()
+
+class UserAdmin(BaseUserAdmin):
+    list_display = BaseUserAdmin.list_display + (
+        'followers_counter', 'recipes_counter')
 
 
 class FollowAdmin(admin.ModelAdmin):

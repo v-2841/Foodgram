@@ -8,16 +8,18 @@ from recipes.models import (
 
 class IngredientInline(admin.TabularInline):
     model = Ingredient
+    min_num = 1
 
 
 class TagRecipeInline(admin.TabularInline):
     model = TagRecipe
+    min_num = 1
 
 
 class RecipeAdmin(admin.ModelAdmin):
     inlines = [IngredientInline, TagRecipeInline]
     search_fields = ['author__username', 'name', 'tags__name']
-    list_display = ['name', 'author', 'favorites_counter']
+    list_display = ['name', 'author', 'favorites_counter', 'ingredients_names']
     readonly_fields = ['favorites_counter']
 
 

@@ -8,9 +8,6 @@ class RecipeFilter(filters.FilterSet):
         field_name='tags__slug',
         lookup_expr='icontains',
     )
-    author = filters.NumberFilter(
-        field_name='author__id',
-    )
     is_favorited = filters.BooleanFilter(method='filter_by_is_favorited')
     is_in_shopping_cart = filters.BooleanFilter(
         method='filter_by_is_in_shopping_cart')
@@ -18,10 +15,6 @@ class RecipeFilter(filters.FilterSet):
     class Meta:
         model = Recipe
         fields = ('is_favorited', 'is_in_shopping_cart', 'author', 'tags')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.request = kwargs['request']
 
     def filter_by_is_favorited(self, queryset, name, value):
         user = self.request.user
