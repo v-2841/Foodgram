@@ -13,7 +13,7 @@ services:
       - pg_data:/var/lib/postgresql/data/
 
   backend:
-    image: vita2841/foodgram
+    image: vita2841/foodgram_backend
     env_file: .env
     volumes:
       - static:/backend_static/
@@ -22,14 +22,14 @@ services:
       - db
 
   frontend:
-    image: vita2841/foodgram
+    image: vita2841/foodgram_frontend
     env_file: .env
     command: cp -r /app/build/. /frontend_static/
     volumes:
       - static:/frontend_static/
 
   gateway:
-    image: vita2841/foodgram
+    image: vita2841/foodgram_gateway
     env_file: .env
     volumes:
       - static:/static/
