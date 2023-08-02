@@ -12,7 +12,7 @@ jobs:
         env:
           POSTGRES_USER: foodgram_user
           POSTGRES_PASSWORD: mysecretpassword
-          POSTGRES_DB: django
+          POSTGRES_DB: foodgram
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -30,7 +30,7 @@ jobs:
         pip install -r ./backend/requirements.txt 
     - name: Test with flake8 and django tests
       env:
-        POSTGRES_USER: django_user
+        POSTGRES_USER: foodgram_user
         POSTGRES_PASSWORD: mysecretpassword
         POSTGRES_DB: test
         DB_HOST: 127.0.0.1
