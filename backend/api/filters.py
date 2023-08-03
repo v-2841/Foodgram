@@ -4,7 +4,7 @@ from recipes.models import Recipe
 
 
 class RecipeFilter(filters.FilterSet):
-    tags = filters.CharFilter(
+    tags = filters.AllValuesMultipleFilter(
         field_name='tags__slug',
         lookup_expr='icontains',
     )
