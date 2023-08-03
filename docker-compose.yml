@@ -11,7 +11,7 @@ services:
     env_file: .env
     volumes:
       - pg_data:/var/lib/postgresql/data/
-    command: -p 5432
+    command: -p 5432:5432
 
   backend:
     build: ./backend/
