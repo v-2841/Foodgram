@@ -107,6 +107,7 @@ class RecipeSerializerPost(serializers.ModelSerializer):
         if not any(c.isalpha() for c in name):
             raise serializers.ValidationError(
                 "Название должно содержать буквы")
+        return name
 
     def validate_tags(self, tags):
         if not tags:
