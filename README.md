@@ -51,3 +51,13 @@ docker compose exec backend python manage.py migrate
 docker compose exec backend python manage.py collectstatic
 docker compose exec backend python manage.py createsuperuser
 ```
+
+### Технологии и необходимые ниструменты:
+- Docker
+- Postgres
+- Python 3.x
+- Node.js 9.x.x
+- Nginx
+- Gunicorn
+- Django (backend)
+- React (frontend)
