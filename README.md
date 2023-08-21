@@ -51,9 +51,3 @@ docker compose exec backend python manage.py migrate
 docker compose exec backend python manage.py collectstatic
 docker compose exec backend python manage.py createsuperuser
 ```
-
-Для проверки:
-https://foodgram2841.servebeer.com/
-Username: test
-Email: test@test.com
-Password: test
