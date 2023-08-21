@@ -52,7 +52,7 @@ docker compose exec backend python manage.py collectstatic
 docker compose exec backend python manage.py createsuperuser
 ```
 
-### Технологии и необходимые ниструменты:
+### Стек технологий:
 - Docker
 - Postgres
 - Python 3.x
